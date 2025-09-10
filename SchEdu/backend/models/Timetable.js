@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
+const JSON_TYPE = (sequelize.getDialect && sequelize.getDialect() === 'postgres') ? DataTypes.JSONB : DataTypes.JSON;
+
 const Timetable = sequelize.define('Timetable', {
   id: {
     type: DataTypes.INTEGER,
@@ -22,7 +24,7 @@ const Timetable = sequelize.define('Timetable', {
     type: DataTypes.INTEGER
   },
   schedule: {
-    type: DataTypes.JSONB,
+    type: JSON_TYPE,
     allowNull: false
   },
   version: {

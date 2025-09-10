@@ -15,7 +15,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { login as apiLogin } from '../services/authService';
 
-const Login = () => {
+const Login = ({ setUserRole }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
@@ -31,16 +31,20 @@ const Login = () => {
 
     try {
       const data = await apiLogin(email.trim().toLowerCase(), password, role.toLowerCase());
+      // Persist role in parent state if provided
+      if (typeof setUserRole === 'function') {
+        setUserRole(data.role);
+      }
       // Navigate based on role returned from backend
       switch (data.role) {
         case 'admin':
-          navigate('/admin');
+          navigate('/admin/dashboard');
           break;
         case 'teacher':
-          navigate('/teacher');
+          navigate('/teacher/dashboard');
           break;
         case 'student':
-          navigate('/student');
+          navigate('/student/dashboard');
           break;
         default:
           setError('Invalid role');

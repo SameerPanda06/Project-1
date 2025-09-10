@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const { User } = require('../models');
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Users
+ *     description: Manage users (dev tools)
+ */
+
 // Middleware to handle validation results
 function validateRequest(req, res, next) {
   const errors = validationResult(req);
@@ -13,6 +20,29 @@ function validateRequest(req, res, next) {
 }
 
 // Create user with validations and unique email check
+/**
+ * @swagger
+ * /api/users:
+ *   post:
+ *     tags: [Users]
+ *     summary: Create a user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, first_name, last_name, role]
+ *             properties:
+ *               email: { type: string, format: email }
+ *               password: { type: string }
+ *               first_name: { type: string }
+ *               last_name: { type: string }
+ *               role: { type: string, enum: [teacher, student, admin] }
+ *     responses:
+ *       201: { description: Created }
+ *       409: { description: Email already registered }
+ */
 router.post(
   '/',
   [
@@ -39,12 +69,28 @@ router.post(
 
       res.status(201).json({ id: newUser.id, email: newUser.email });
     } catch (err) {
+      console.error('Create user error:', err.name, err.errors?.map(e => ({ message: e.message, path: e.path, value: e.value })));
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   }
 );
 
 // Delete user by email - for test cleanup only (use with caution)
+/**
+ * @swagger
+ * /api/users/email/{email}:
+ *   delete:
+ *     tags: [Users]
+ *     summary: Delete user by email (dev only)
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema: { type: string, format: email }
+ *         required: true
+ *     responses:
+ *       204: { description: No Content }
+ *       404: { description: Not found }
+ */
 router.delete('/email/:email', async (req, res) => {
   try {
     const deleted = await User.destroy({ where: { email: req.params.email } });
@@ -56,6 +102,16 @@ router.delete('/email/:email', async (req, res) => {
 });
 
 // Get all users
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     tags: [Users]
+ *     summary: List users
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 router.get('/', async (req, res) => {
   try {
     const users = await User.findAll();
@@ -66,6 +122,21 @@ router.get('/', async (req, res) => {
 });
 
 // Get user by id with 404
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get user by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: integer }
+ *         required: true
+ *     responses:
+ *       200: { description: OK }
+ *       404: { description: Not found }
+ */
 router.get('/:id', async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
@@ -105,6 +176,21 @@ router.put(
 );
 
 // Delete user by id
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     tags: [Users]
+ *     summary: Delete user by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: integer }
+ *         required: true
+ *     responses:
+ *       204: { description: No Content }
+ *       404: { description: Not found }
+ */
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await User.destroy({ where: { id: req.params.id } });

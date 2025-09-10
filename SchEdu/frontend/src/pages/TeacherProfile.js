@@ -17,7 +17,7 @@ const TeacherProfile = () => {
 
   return (
     <Container sx={{ mt: 6, mb: 6 }}>
-      <Button variant="contained" color="secondary" onClick={() => navigate('/teacher')} sx={{ mb: 3 }}>
+<Button variant="contained" color="secondary" onClick={() => navigate('/teacher/dashboard')} sx={{ mb: 3 }}>
         Back to Dashboard
       </Button>
       <ProfileForm initialData={mockTeacherProfile} onSubmit={handleSubmit} />

@@ -21,7 +21,7 @@ import StudentNotifications from './pages/StudentNotifications';
 import StudentProfile from './pages/StudentProfile';
 
 import ProtectedRoute from './components/ProtectedRoute';
-import { getToken, getRole } from './services/authService';
+import { getRole } from './services/authService';
 
 function App() {
   // State to hold user role after login/token parse
@@ -42,6 +42,7 @@ function App() {
         <Route path="/login" element={<Login setUserRole={setUserRole} />} />
 
         {/* Admin routes */}
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route
           path="/admin/dashboard"
           element={
@@ -76,6 +77,7 @@ function App() {
         />
 
         {/* Teacher routes */}
+        <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
         <Route
           path="/teacher/dashboard"
           element={
@@ -126,6 +128,7 @@ function App() {
         />
 
         {/* Student routes */}
+        <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
         <Route
           path="/student/dashboard"
           element={

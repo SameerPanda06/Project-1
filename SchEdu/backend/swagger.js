@@ -2,6 +2,7 @@ const path = require('path');
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+const port = process.env.PORT || 3001;
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -10,7 +11,7 @@ const options = {
       version: '1.0.0',
       description: 'API documentation for SchEdu Backend',
     },
-    servers: [{ url: 'http://localhost:3000' }],
+    servers: [{ url: `http://localhost:${port}` }],
   },
   // Make sure this is an absolute path and path module is imported
   apis: [path.join(__dirname, 'routes', '*.js')],

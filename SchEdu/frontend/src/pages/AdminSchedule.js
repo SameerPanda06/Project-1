@@ -7,7 +7,10 @@ import {
   TextField,
   Button,
   Grid,
+  Alert,
 } from '@mui/material';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import PageHeader from '../components/PageHeader';
 import { jsPDF } from 'jspdf';
 
 const initialSchedules = [
@@ -38,6 +41,25 @@ const AdminSchedule = () => {
     setForm({ day: '', time: '', subject: '', teacher: '', classroom: '' });
   };
 
+  const [genMsg, setGenMsg] = useState('');
+  const [genErr, setGenErr] = useState('');
+  const API = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+  const handleGenerate = async () => {
+    setGenMsg('');
+    setGenErr('');
+    try {
+      const res = await fetch(`${API}/timetables/generate-all`, { method: 'POST' });
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch (_) { /* non-JSON error page */ }
+      if (!res.ok) throw new Error(data.error || text || `Failed to generate (HTTP ${res.status})`);
+      setGenMsg(`Generated timetables for ${data.created} classes.`);
+    } catch (e) {
+      setGenErr(e.message);
+    }
+  };
+
   const handleExport = () => {
     const doc = new jsPDF();
     doc.text('Class Schedule', 10, 10);
@@ -51,9 +73,21 @@ const AdminSchedule = () => {
 
   return (
     <Container sx={{ mt: 6, mb: 6 }}>
-      <Typography variant="h4" fontWeight="bold" mb={3}>
-        Manage Schedule
-      </Typography>
+      <PageHeader
+        role="admin"
+        icon={<ScheduleIcon sx={{ fontSize: 40 }} />}
+        title="Manage Schedule"
+        subtitle="Create class periods and export your overview"
+        action={(
+          <Box>
+            <Button variant="contained" color="primary" onClick={handleGenerate} sx={{ mr: 2 }}>
+              Generate Timetables
+            </Button>
+          </Box>
+        )}
+      />
+      {genMsg && <Alert severity="success" sx={{ mb: 2 }}>{genMsg}</Alert>}
+      {genErr && <Alert severity="error" sx={{ mb: 2 }}>{genErr}</Alert>}
       <Paper elevation={4} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={3}>

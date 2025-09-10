@@ -9,8 +9,8 @@ const Notification = require('./Notification');
 const SystemSetup = require('./SystemSetup');
 
 // Associations
-User.hasMany(Leave, { foreignKey: 'teacher_id' });
-Leave.belongsTo(User, { foreignKey: 'teacher_id' });
+User.hasMany(Leave, { foreignKey: 'teacher_id', as: 'leaves' });
+Leave.belongsTo(User, { foreignKey: 'teacher_id', as: 'teacher' });
 
 Class.hasMany(Timetable, { foreignKey: 'class_id' });
 Timetable.belongsTo(Class, { foreignKey: 'class_id' });

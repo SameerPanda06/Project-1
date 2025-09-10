@@ -8,14 +8,16 @@ import {
   Tab,
   Box,
   useTheme,
+  Button,
+  Alert,
 } from '@mui/material';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SchoolIcon from '@mui/icons-material/School';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 
 const tabProps = (index) => ({
   id: `admin-tab-${index}`,
@@ -26,8 +28,13 @@ const AdminDashboard = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [value, setValue] = useState(0);
+  const [genMsg, setGenMsg] = useState('');
+  const [genErr, setGenErr] = useState('');
+  const API = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
   const handleChange = (event, newValue) => {
+    setGenMsg('');
+    setGenErr('');
     setValue(newValue);
     switch (newValue) {
       case 0:
@@ -47,14 +54,32 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleGenerate = async () => {
+    setGenMsg('');
+    setGenErr('');
+    try {
+      const res = await fetch(`${API}/timetables/generate-all`, { method: 'POST' });
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch (_) { /* HTML error page */ }
+      if (!res.ok) throw new Error(data.error || text || `Failed to generate timetables (HTTP ${res.status})`);
+      setGenMsg(`Generated timetables for ${data.created} classes.`);
+    } catch (e) {
+      setGenErr(e.message);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 6 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <SchoolIcon color="primary" sx={{ fontSize: 48, mr: 1 }} />
-        <Typography variant="h4" fontWeight="bold" color="primary">
-          Your School Name
-        </Typography>
-      </Box>
+      <PageHeader
+        role="admin"
+        icon={<SchoolIcon sx={{ fontSize: 48 }} />}
+        title="Your School Name"
+        subtitle="Smart timetabling and leave-aware scheduling for your institute"
+        action={<Button variant="contained" color="primary" onClick={handleGenerate} sx={{ px: 3 }}>Generate Timetables</Button>}
+      />
+      {genMsg && <Alert severity="success" sx={{ mb: 2 }}>{genMsg}</Alert>}
+      {genErr && <Alert severity="error" sx={{ mb: 2 }}>{genErr}</Alert>}
       <Typography variant="h3" fontWeight="bold" gutterBottom color={theme.palette.primary.main}>
         Admin Dashboard
       </Typography>

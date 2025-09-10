@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
+const JSON_TYPE = (sequelize.getDialect && sequelize.getDialect() === 'postgres') ? DataTypes.JSONB : DataTypes.JSON;
+
 const Notification = sequelize.define('Notification', {
   id: {
     type: DataTypes.INTEGER,
@@ -31,7 +33,7 @@ const Notification = sequelize.define('Notification', {
     allowNull: false
   },
   data: {
-    type: DataTypes.JSONB
+    type: JSON_TYPE
   },
   priority: {
     type: DataTypes.ENUM('low', 'medium', 'high', 'urgent'),

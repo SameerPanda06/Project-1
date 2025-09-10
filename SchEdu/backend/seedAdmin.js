@@ -1,23 +1,35 @@
-const db = require('./models'); // Adjust the path accordingly
-const bcrypt = require('bcryptjs');
+const { User, sequelize } = require('./models');
 
 async function seedAdmin() {
   try {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    // Ensure DB is ready
+    await sequelize.sync();
 
-    await db.User.create({
-      email: 'admin@example.com',
-      password: hashedPassword,
-      role: 'admin',
-      first_name: 'Super',
-      last_name: 'Admin',
-    });
+    const email = 'admin@example.com';
+    const password = 'pass123'; // raw password; model hooks will hash it
 
-    console.log('Admin user created');
+    let user = await User.findOne({ where: { email } });
+    if (!user) {
+      user = await User.create({
+        email,
+        password,
+        role: 'admin',
+        first_name: 'Super',
+        last_name: 'Admin',
+      });
+      console.log('Admin user created');
+    } else {
+      user.first_name = 'Super';
+      user.last_name = 'Admin';
+      user.role = 'admin';
+      user.password = password; // will hash via beforeUpdate hook
+      await user.save();
+      console.log('Admin user updated (password reset)');
+    }
   } catch (error) {
-    console.error('Error creating admin:', error);
+    console.error('Error creating/updating admin:', error);
   } finally {
-    process.exit();
+    process.exit(0);
   }
 }
 

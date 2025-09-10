@@ -13,6 +13,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate, useLocation } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 
 const tabToIndex = {
   '/student/timetable': 0,
@@ -46,9 +47,13 @@ const StudentDashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 6 }}>
-      <Typography variant="h3" fontWeight="bold" gutterBottom color={theme.palette.primary.main}>
-        Student Dashboard
-      </Typography>
+      <PageHeader
+        role="student"
+        icon={<SchoolIcon sx={{ fontSize: 44 }} />}
+        title="Student Dashboard"
+        subtitle="Check your timetable and notifications"
+        action={null}
+      />
       <Paper elevation={8} sx={{ borderRadius: 3 }}>
         <AppBar position="static" sx={{ bgcolor: theme.palette.background.paper }}>
           <Tabs

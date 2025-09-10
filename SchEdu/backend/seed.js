@@ -7,7 +7,7 @@ async function seed() {
     await sequelize.sync({ force: true }); // Warning: wipes existing data!
 
     // Replace with real hashed passwords
-    const hashedPassword = await bcrypt.hash('password123', 10);
+  const hashedPassword = await bcrypt.hash('pass123', 10);
 
     await User.bulkCreate([
       { first_name: 'Admin', email: 'admin@example.com', password: hashedPassword, role: 'admin' },

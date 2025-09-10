@@ -14,6 +14,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 
 const tabProps = (index) => ({
   id: `teacher-tab-${index}`,
@@ -47,9 +48,13 @@ const TeacherDashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 6 }}>
-      <Typography variant="h3" fontWeight="bold" gutterBottom color={theme.palette.primary.main}>
-        Teacher Dashboard
-      </Typography>
+      <PageHeader
+        role="teacher"
+        icon={<EventNoteIcon sx={{ fontSize: 44 }} />}
+        title="Teacher Dashboard"
+        subtitle="View your weekly schedule, notifications and manage leaves"
+        action={null}
+      />
       <Paper elevation={8} sx={{ borderRadius: 3 }}>
         <AppBar position="static" sx={{ bgcolor: theme.palette.background.paper }}>
           <Tabs

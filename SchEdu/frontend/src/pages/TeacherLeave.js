@@ -24,8 +24,8 @@ const TeacherLeave = () => {
       setError('Please enter number of leave days.');
       return false;
     }
-    if (daysApplied < 1 || daysApplied > 2) {
-      setError('You can apply for 1 or 2 leave days only.');
+    if (daysApplied < 1 || daysApplied > 4) {
+      setError('You can apply for up to 4 working days per month.');
       return false;
     }
     return true;
@@ -38,31 +38,36 @@ const TeacherLeave = () => {
 
     if (!validateForm()) return;
 
-    try {
-      const response = await fetch('/api/leave', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // adjust as needed
-        },
-        body: JSON.stringify({
-          weekStartDate: weekStartDate.toISOString().split('T')[0],
-          daysApplied: Number(daysApplied),
-        }),
-      });
+      try {
+        const API = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+        const response = await fetch(`${API}/leaves`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            // Map UI fields to API fields
+            teacher_id: Number(localStorage.getItem('user_id')) || 0,
+            leave_type: 'casual',
+            start_date: weekStartDate.toISOString().split('T')[0],
+            end_date: new Date(weekStartDate.getTime() + (Number(daysApplied)-1)*24*60*60*1000).toISOString().split('T')[0],
+            reason: `Auto-submitted ${Number(daysApplied)} day(s)`,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.message || 'Failed to apply for leave.');
-      } else {
-        setSuccess('Leave applied successfully and automatically approved.');
-        setWeekStartDate(null);
-        setDaysApplied('');
+        if (!response.ok) {
+          setError(data.message || 'Failed to apply for leave.');
+        } else {
+          setSuccess('Leave applied successfully and automatically approved.');
+          setWeekStartDate(null);
+          setDaysApplied('');
+        }
+      } catch (e) {
+        setError('Network error. Please try again later.');
       }
-    } catch {
-      setError('Network error. Please try again later.');
-    }
   };
 
   return (
@@ -85,7 +90,7 @@ const TeacherLeave = () => {
         <TextField
           label="Days Applied"
           type="number"
-          inputProps={{ min: 1, max: 2 }}
+          inputProps={{ min: 1, max: 4 }}
           value={daysApplied}
           onChange={(e) => setDaysApplied(e.target.value)}
           fullWidth
@@ -94,7 +99,7 @@ const TeacherLeave = () => {
         />
 
         <Typography variant="caption" color="textSecondary" sx={{ mb: 1 }}>
-          You can apply for up to 2 leave days per week. Leave requests within limits are automatically approved.
+          Policy: up to 4 working days per month (Mon–Fri). Requests within the remaining quota are auto-approved and timetables are auto-adjusted.
         </Typography>
 
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>

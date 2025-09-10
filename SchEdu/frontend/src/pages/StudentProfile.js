@@ -18,7 +18,7 @@ const StudentProfile = () => {
 
   return (
     <Container sx={{ mt: 6, mb: 6 }}>
-      <Button variant="contained" color="secondary" onClick={() => navigate('/student')} sx={{ mb: 3 }}>
+<Button variant="contained" color="secondary" onClick={() => navigate('/student/dashboard')} sx={{ mb: 3 }}>
         Back to Dashboard
       </Button>
       <ProfileForm initialData={mockStudentProfile} onSubmit={handleSubmit} />

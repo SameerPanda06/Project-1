@@ -17,7 +17,7 @@ const AdminProfile = () => {
 
   return (
     <Container sx={{ mt: 6, mb: 6 }}>
-      <Button variant="contained" color="secondary" onClick={() => navigate('/admin')} sx={{ mb: 3 }}>
+<Button variant="contained" color="secondary" onClick={() => navigate('/admin/dashboard')} sx={{ mb: 3 }}>
         Back to Dashboard
       </Button>
       <ProfileForm initialData={mockAdminProfile} onSubmit={handleSubmit} />

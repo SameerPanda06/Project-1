@@ -26,7 +26,7 @@ router.post(
 
 router.get('/current', async (req, res) => {
   try {
-    const setup = await SystemSetup.findOne({ where: { is_active: true }, order: [['created_at', 'DESC']] });
+    const setup = await SystemSetup.findOne({ where: { is_active: true }, order: [['createdAt', 'DESC']] });
     if (!setup) return res.status(404).json({ error: 'No active system setup found' });
     res.json(setup);
   } catch (err) {
@@ -36,7 +36,7 @@ router.get('/current', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const setups = await SystemSetup.findAll({ order: [['created_at', 'DESC']] });
+    const setups = await SystemSetup.findAll({ order: [['createdAt', 'DESC']] });
     res.json(setups);
   } catch (err) {
     res.status(500).json({ error: err.message });

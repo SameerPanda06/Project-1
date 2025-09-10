@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
+const JSON_TYPE = (sequelize.getDialect && sequelize.getDialect() === 'postgres') ? DataTypes.JSONB : DataTypes.JSON;
+
 const SystemSetup = sequelize.define('SystemSetup', {
   id: {
     type: DataTypes.INTEGER,
@@ -16,7 +18,7 @@ const SystemSetup = sequelize.define('SystemSetup', {
     allowNull: false
   },
   working_days: {
-    type: DataTypes.JSONB,
+    type: JSON_TYPE,
     defaultValue: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
   },
   periods_per_day: {
@@ -28,16 +30,16 @@ const SystemSetup = sequelize.define('SystemSetup', {
     defaultValue: 50
   },
   break_times: {
-    type: DataTypes.JSONB
+    type: JSON_TYPE
   },
   csp_settings: {
-    type: DataTypes.JSONB
+    type: JSON_TYPE
   },
   leave_settings: {
-    type: DataTypes.JSONB
+    type: JSON_TYPE
   },
   notification_settings: {
-    type: DataTypes.JSONB
+    type: JSON_TYPE
   },
   is_active: {
     type: DataTypes.BOOLEAN,

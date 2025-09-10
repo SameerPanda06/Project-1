@@ -6,7 +6,7 @@ async function seedTeachers() {
   try {
     await sequelize.sync({ alter: true });
 
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const hashedPassword = await bcrypt.hash('pass123', 10);
 
     await User.bulkCreate([
       {

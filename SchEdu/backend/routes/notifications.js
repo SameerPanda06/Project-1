@@ -30,7 +30,7 @@ router.get('/user/:userId', async (req, res) => {
   try {
     const notifications = await Notification.findAll({
       where: { recipient_id: req.params.userId, is_active: true },
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
       limit: 50
     });
     res.json(notifications);
@@ -43,7 +43,7 @@ router.get('/user/:userId/unread', async (req, res) => {
   try {
     const notifications = await Notification.findAll({
       where: { recipient_id: req.params.userId, status: 'unread', is_active: true },
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
     res.json(notifications);
   } catch (err) {

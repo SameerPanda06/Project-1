@@ -33,7 +33,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3001', // adjust frontend URL
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // CRA default dev URL
     credentials: true,
   })
 );
@@ -79,7 +79,7 @@ if (require.main === module) {
       await sequelize.sync();
       console.log('Database synced successfully.');
 
-      const PORT = process.env.PORT || 3000;
+      const PORT = process.env.PORT || 3001;
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
       });

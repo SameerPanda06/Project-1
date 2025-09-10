@@ -1,33 +1,128 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   Typography,
   Paper,
-  Grid,
   useTheme,
+  Box,
+  Chip,
+  Tooltip,
+  Table,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell,
 } from '@mui/material';
 
-// Mock timetable data for student
-const timetableData = {
-  Monday: [{ time: '9:00-10:00', subject: 'Math', classroom: '101' }],
-  Tuesday: [
-    { time: '10:00-11:00', subject: 'Physics', classroom: '102' },
-    { time: '2:00-3:00', subject: 'English', classroom: '103' },
-  ],
-  Wednesday: [{ time: '11:00-12:00', subject: 'Chemistry', classroom: '101' }],
-  Thursday: [],
-  Friday: [{ time: '1:00-2:00', subject: 'Biology', classroom: '102' }],
-};
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+const PERIODS = [1, 2, 3, 4, 5, 6];
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const times = ['9:00-10:00', '10:00-11:00', '11:00-12:00', '1:00-2:00', '2:00-3:00'];
+// Helpers to compute current week dates (Mon-Fri) and period time ranges
+function getCurrentWeekDays() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun..6=Sat
+  const monday = new Date(now);
+  const diffToMonday = (day === 0 ? -6 : 1 - day);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+  const days = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+function fmtHM(h, m) {
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+function addMinutes(h, m, add) {
+  const total = h * 60 + m + add;
+  const nh = Math.floor(total / 60) % 24;
+  const nm = total % 60;
+  return [nh, nm];
+}
+function buildTimeSlots(periodCount, startHour = 9, startMinute = 0, periodMinutes = 50, breakMinutes = 10) {
+  const slots = [];
+  let h = startHour, m = startMinute;
+  for (let i = 0; i < periodCount; i++) {
+    const [eh, em] = addMinutes(h, m, periodMinutes);
+    slots.push(`${fmtHM(h, m)} – ${fmtHM(eh, em)}`);
+    // move to next start
+    const [nh, nm] = addMinutes(eh, em, breakMinutes);
+    h = nh; m = nm;
+  }
+  return slots;
+}
+
+const accentChip = (theme) => ({ borderColor: theme.palette.primary.main, color: theme.palette.primary.main, backgroundColor: '#fff' });
 
 const StudentTimetable = () => {
   const theme = useTheme();
+  const API = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-  const getClassForSlot = (day, slot) => {
-    const classes = timetableData[day] || [];
-    return classes.find((cls) => cls.time === slot) || null;
+  const [subjects, setSubjects] = useState({});
+  const [schedule, setSchedule] = useState({});
+  const [className, setClassName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Load student's timetable directly using their ID
+    const load = async () => {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        setError('Please log in to view your timetable');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Load subjects list for name mapping
+        const subRes = await fetch(`${API}/subjects`);
+        const subs = await subRes.json();
+        const map = {};
+        subs.forEach((s) => (map[s.id] = s.name));
+        setSubjects(map);
+
+        // Load student's timetable
+        const ttRes = await fetch(`${API}/timetables/student/${userId}`);
+        if (!ttRes.ok) {
+          const errorData = await ttRes.json();
+          setError(errorData.error || 'Failed to load timetable');
+          setSchedule({});
+        } else {
+          const tt = await ttRes.json();
+          setClassName(tt.class_name || 'Your Class');
+          if (!tt || !tt.schedule) {
+            setSchedule({});
+          } else {
+            setSchedule(tt.schedule);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load timetable:', err);
+        setError('Failed to load timetable. Please try again.');
+        setSchedule({});
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [API]);
+
+  // Single-accent design: no color legend needed
+
+  const renderCell = (day, period) => {
+    const dayArr = schedule?.[day] || [];
+    const sess = dayArr.find((s) => s.period === period);
+    if (!sess) return null;
+const name = subjects[sess.subject_id] || `SUB-${sess.subject_id}`;
+    return (
+      <Tooltip title={sess.room ? `Room ${sess.room}` : ''} placement="top" arrow>
+        <Chip label={name} size="small" variant="outlined" sx={accentChip(theme)} />
+      </Tooltip>
+    );
   };
 
   return (
@@ -35,74 +130,58 @@ const StudentTimetable = () => {
       <Typography variant="h4" fontWeight="bold" gutterBottom color={theme.palette.primary.main}>
         Student Timetable
       </Typography>
-      <Paper elevation={6} sx={{ p: 3, borderRadius: 3, overflowX: 'auto' }}>
-        <Grid container spacing={0} sx={{ minWidth: 720 }}>
-          <Grid item xs={2} sx={{ borderBottom: 1, borderRight: 1, borderColor: 'divider', p: 1 }}>
-            <Typography variant="subtitle1" fontWeight="bold">
-              Time / Day
-            </Typography>
-          </Grid>
-          {days.map((day) => (
-            <Grid
-              key={day}
-              item
-              xs={2}
-              sx={{
-                borderBottom: 1,
-                borderRight: 1,
-                borderColor: 'divider',
-                backgroundColor: theme.palette.action.hover,
-                p: 1,
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight="bold">
-                {day}
-              </Typography>
-            </Grid>
-          ))}
-          {times.map((slot) => (
-            <React.Fragment key={slot}>
-              <Grid
-                item
-                xs={2}
-                sx={{
-                  borderBottom: 1,
-                  borderRight: 1,
-                  borderColor: 'divider',
-                  p: 1,
-                  fontWeight: 'medium',
-                }}
-              >
-                {slot}
-              </Grid>
-              {days.map((day) => {
-                const cls = getClassForSlot(day, slot);
-                return (
-                  <Grid
-                    key={`${day}-${slot}`}
-                    item
-                    xs={2}
-                    sx={{
-                      borderBottom: 1,
-                      borderRight: 1,
-                      borderColor: 'divider',
-                      p: 1,
-                      minHeight: 60,
-                    }}
-                  >
-                    {cls ? (
-                      <>
-                        <Typography variant="subtitle2">{cls.subject}</Typography>
-                        <Typography variant="caption">{cls.classroom}</Typography>
-                      </>
-                    ) : null}
-                  </Grid>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </Grid>
+
+      {className && (
+        <Typography variant="h6" gutterBottom color="text.secondary">
+          Class: {className}
+        </Typography>
+      )}
+
+      {error && (
+        <Box sx={{ mb: 2 }}>
+          <Typography color="error">{error}</Typography>
+        </Box>
+      )}
+
+      {loading && (
+        <Box sx={{ mb: 2 }}>
+          <Typography>Loading your timetable...</Typography>
+        </Box>
+      )}
+
+      <Paper elevation={8} sx={{ p: 3, borderRadius: 3, overflowX: 'auto', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)' }}>
+        {(() => {
+          const weekDates = getCurrentWeekDays();
+          const slots = buildTimeSlots(PERIODS.length);
+          return (
+            <Table size="small" sx={{ minWidth: 720 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Time</TableCell>
+                  {weekDates.map((d, idx) => (
+                    <TableCell key={idx} align="center" sx={{ fontWeight: 700 }}>
+                      {d.toLocaleDateString(undefined, { weekday: 'short' })} {d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {PERIODS.map((p, rowIdx) => (
+                  <TableRow key={p} hover>
+                    <TableCell sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{slots[rowIdx]}</TableCell>
+                    {DAYS.map((day, colIdx) => (
+                      <TableCell key={`${day}-${p}`} align="center">
+                        {renderCell(day, p) || (
+                          <Typography variant="caption" color="text.secondary">—</Typography>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          );
+        })()}
       </Paper>
     </Container>
   );

@@ -8,6 +8,41 @@ const validateRequest = require('../middleware/validationMiddleware');
 const router = express.Router();
 const SECRET_KEY = process.env.SECRET_KEY || 'your_secret_key_here';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Auth
+ *     description: Authentication endpoints
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, email, password]
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [teacher, student, admin]
+ *     responses:
+ *       201:
+ *         description: User registered
+ *       409:
+ *         description: Email already registered
+ *       400:
+ *         description: Validation error
+ */
 // Register route
 router.post(
   '/register',
@@ -43,21 +78,47 @@ router.post(
 
       res.status(201).json({ message: 'User registered', userId: user.id });
     } catch (err) {
+      console.error('Register error:', err.name, err.errors?.map(e => ({ message: e.message, path: e.path, value: e.value })));
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   }
 );
 
-// Login route (with role check)
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [teacher, student, admin]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       401:
+ *         description: Invalid credentials
+ */
+// Login route (role optional)
 router.post(
   '/login',
   [
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required'),
-    body('role')
-      .notEmpty()
-      .isIn(['teacher', 'student', 'admin'])
-      .withMessage('Role is required and must be valid'),
+    body('role').optional().isIn(['teacher', 'student', 'admin']).withMessage('Invalid role'),
   ],
   validateRequest,
   async (req, res) => {
@@ -65,17 +126,15 @@ router.post(
 
     try {
       const normalizedEmail = email.toLowerCase();
-      const normalizedRole = role.toLowerCase();
+      const normalizedRole = role ? role.toLowerCase() : undefined;
 
-      // Find user by email and role
-      const user = await User.findOne({
-        where: { email: normalizedEmail, role: normalizedRole },
-      });
+      // Find user by email only; role is ignored for authentication and returned from DB
+      const user = await User.findOne({ where: { email: normalizedEmail } });
 
-      if (!user) return res.status(401).json({ message: 'Invalid credentials or role' });
+      if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
       const valid = await bcrypt.compare(password, user.password);
-      if (!valid) return res.status(401).json({ message: 'Invalid credentials or role' });
+      if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
 
       const token = jwt.sign(
         { id: user.id, role: user.role, email: user.email },
@@ -83,7 +142,7 @@ router.post(
         { expiresIn: '8h' }
       );
 
-      res.json({ token, role: user.role });
+      res.json({ token, role: user.role, id: user.id });
     } catch (err) {
       res.status(500).json({ message: 'Server error', error: err.message });
     }

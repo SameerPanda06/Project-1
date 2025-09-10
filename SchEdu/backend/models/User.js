@@ -37,6 +37,11 @@ const User = sequelize.define(
     department: {
       type: DataTypes.STRING(255),
     },
+    class_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'For students: the class they belong to',
+    },
     leave_balance: {
       type: DataTypes.INTEGER,
       defaultValue: 20,
