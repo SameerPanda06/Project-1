@@ -31,10 +31,12 @@ app.use((req, res, next) => {
 // Security Middlewares
 app.use(helmet());
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001', // set your frontend URL here or in .env
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3001', // adjust frontend URL
+    credentials: true,
+  })
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

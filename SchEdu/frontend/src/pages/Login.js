@@ -13,48 +13,40 @@ import {
   Paper,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
-const mockUsers = [
-  { username: 'admin', password: 'pass123', role: 'Admin' },
-  { username: 'teacher', password: 'pass123', role: 'Teacher' },
-  { username: 'student', password: 'pass123', role: 'Student' },
-];
+import { login as apiLogin } from '../services/authService';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError('');
-    if (!username || !password || !role) {
+    if (!email || !password || !role) {
       setError('Please fill all fields');
       return;
     }
-    const user = mockUsers.find(
-      (u) =>
-        u.username === username.trim() &&
-        u.password === password &&
-        u.role === role
-    );
-    if (!user) {
-      setError('Invalid credentials or role');
-      return;
-    }
-    switch (role) {
-      case 'Admin':
-        navigate('/admin');
-        break;
-      case 'Teacher':
-        navigate('/teacher');
-        break;
-      case 'Student':
-        navigate('/student');
-        break;
-      default:
-        setError('Invalid role');
+
+    try {
+      const data = await apiLogin(email.trim().toLowerCase(), password, role.toLowerCase());
+      // Navigate based on role returned from backend
+      switch (data.role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'teacher':
+          navigate('/teacher');
+          break;
+        case 'student':
+          navigate('/student');
+          break;
+        default:
+          setError('Invalid role');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 
@@ -71,9 +63,9 @@ const Login = () => {
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             fullWidth
           />
           <TextField
@@ -90,9 +82,9 @@ const Login = () => {
               label="Role"
               onChange={(e) => setRole(e.target.value)}
             >
-              <MenuItem value="Admin">Admin</MenuItem>
-              <MenuItem value="Teacher">Teacher</MenuItem>
-              <MenuItem value="Student">Student</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="teacher">Teacher</MenuItem>
+              <MenuItem value="student">Student</MenuItem>
             </Select>
           </FormControl>
           <Button variant="contained" color="primary" onClick={handleLogin}>

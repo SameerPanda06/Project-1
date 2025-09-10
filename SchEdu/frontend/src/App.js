@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from './pages/Login';
@@ -20,29 +20,32 @@ import StudentTimetable from './pages/StudentTimetable';
 import StudentNotifications from './pages/StudentNotifications';
 import StudentProfile from './pages/StudentProfile';
 
-// ProtectedRoute component to handle role-based access
-function ProtectedRoute({ userRole, allowedRoles, redirectPath = '/login', children }) {
-  if (!userRole || !allowedRoles.includes(userRole)) {
-    return <Navigate to={redirectPath} replace />;
-  }
-  return children;
-}
+import ProtectedRoute from './components/ProtectedRoute';
+import { getToken, getRole } from './services/authService';
 
 function App() {
-  // TODO: Get userRole dynamically from auth context or storage
-  const userRole = /* 'Admin' | 'Teacher' | 'Student' | null */ null;
+  // State to hold user role after login/token parse
+  const [userRole, setUserRole] = useState(null);
+
+  // On mount, try to get role from localStorage (set after login)
+  useEffect(() => {
+    const role = getRole(); // get role from authService/localStorage
+    if (role) {
+      setUserRole(role);
+    }
+  }, []);
 
   return (
     <Router>
       <Routes>
         {/* Public route */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login setUserRole={setUserRole} />} />
 
         {/* Admin routes */}
         <Route
           path="/admin/dashboard"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Admin']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
               <AdminDashboard />
             </ProtectedRoute>
           }
@@ -50,7 +53,7 @@ function App() {
         <Route
           path="/admin/schedule"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Admin']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
               <AdminSchedule />
             </ProtectedRoute>
           }
@@ -58,7 +61,7 @@ function App() {
         <Route
           path="/admin/notifications"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Admin']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
               <AdminNotifications />
             </ProtectedRoute>
           }
@@ -66,7 +69,7 @@ function App() {
         <Route
           path="/admin/profile"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Admin']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
               <AdminProfile />
             </ProtectedRoute>
           }
@@ -76,7 +79,7 @@ function App() {
         <Route
           path="/teacher/dashboard"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Teacher']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['teacher']}>
               <TeacherDashboard />
             </ProtectedRoute>
           }
@@ -84,7 +87,7 @@ function App() {
         <Route
           path="/teacher/schedule"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Teacher']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['teacher']}>
               <TeacherSchedule />
             </ProtectedRoute>
           }
@@ -92,7 +95,7 @@ function App() {
         <Route
           path="/teacher/notifications"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Teacher']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['teacher']}>
               <TeacherNotifications />
             </ProtectedRoute>
           }
@@ -100,7 +103,7 @@ function App() {
         <Route
           path="/teacher/profile"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Teacher']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['teacher']}>
               <TeacherProfile />
             </ProtectedRoute>
           }
@@ -108,15 +111,15 @@ function App() {
         <Route
           path="/teacher/leave"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Teacher']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['teacher']}>
               <TeacherLeave />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route
           path="/teacher/leave/history"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Teacher']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['teacher']}>
               <TeacherLeaveHistory />
             </ProtectedRoute>
           }
@@ -126,7 +129,7 @@ function App() {
         <Route
           path="/student/dashboard"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Student']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['student']}>
               <StudentDashboard />
             </ProtectedRoute>
           }
@@ -134,7 +137,7 @@ function App() {
         <Route
           path="/student/timetable"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Student']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['student']}>
               <StudentTimetable />
             </ProtectedRoute>
           }
@@ -142,7 +145,7 @@ function App() {
         <Route
           path="/student/notifications"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Student']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['student']}>
               <StudentNotifications />
             </ProtectedRoute>
           }
@@ -150,13 +153,13 @@ function App() {
         <Route
           path="/student/profile"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={['Student']}>
+            <ProtectedRoute userRole={userRole} allowedRoles={['student']}>
               <StudentProfile />
             </ProtectedRoute>
           }
         />
 
-        {/* Fallback route */}
+        {/* Default fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
